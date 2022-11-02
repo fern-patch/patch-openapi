@@ -1,6 +1,6 @@
-# {Company} {Api Name} OpenAPI Description
+# Patch API OpenAPI Description
 
-This repository contains [OpenAPI](https://www.openapis.org/) description for <{docs_url}>.
+This repository contains [OpenAPI](https://www.openapis.org/) description for <https://docs.patch.io/>.
 
 ## What is OpenAPI?
 
@@ -10,4 +10,4 @@ From the [OpenAPI Specification](https://github.com/OAI/OpenAPI-Specification):
 
 ## Issues
 
-Feel free to [leave an issue](https://github.com/fern-{company}/{company}-openapi) on this repo.
+Feel free to [leave an issue](https://github.com/fern-patch/patch-openapi) on this repo.
