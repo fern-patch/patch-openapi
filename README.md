@@ -1,6 +1,6 @@
 # Patch API OpenAPI Description
 
-This repository contains [OpenAPI](https://www.openapis.org/) description for <https://docs.patch.io/>.
+This repository contains [OpenAPI description](/openapi.yml) for <https://docs.patch.io/>.
 
 ## What is OpenAPI?
 
