@@ -1,0 +1,297 @@
+openapi: 3.0.1
+info:
+  title: api
+  version: 0.0.3
+paths:
+  /estimates/{id}:
+    get:
+      description: Historical estimates are stored for 30 days.
+      operationId: EstimatesService.retrieve
+      tags:
+        - EstimatesService
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/EstimatesEstimateId'
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EstimatesEstimate'
+      security: &ref_0
+        - BearerAuth: []
+  /estimates/:
+    get:
+      description: Retrieve a list of Estimates
+      operationId: EstimatesService.retrieveList
+      tags:
+        - EstimatesService
+      parameters: []
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/EstimatesEstimate'
+      security: *ref_0
+  /estimates/flight:
+    post:
+      description: >-
+        Used to create an estimate of the CO₂ equivalent emitted per passenger
+        based on distance traveled, aircraft type, and cabin class.
+      operationId: EstimatesService.createFlightEstimate
+      tags:
+        - EstimatesService
+      parameters: []
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EstimatesEstimate'
+      security: *ref_0
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EstimatesCreateFlightEstimateRequest'
+components:
+  schemas:
+    Commonsid:
+      type: string
+    EstimatesEstimateId:
+      type: string
+      format: uuid
+    EstimatesEstimate:
+      type: object
+      properties:
+        id:
+          $ref: '#/components/schemas/EstimatesEstimateId'
+          description: >-
+            A unique uid for the record. UIDs will be prepended by est_prod or
+            est_test depending on the mode it was created in.
+        production:
+          type: boolean
+          description: >-
+            A boolean indicating if this estimate is a production or demo mode
+            estimate.
+        type:
+          type: string
+          description: >-
+            The type of estimate. Available types are mass, flight, shipping,
+            vehicle, and crypto.
+        mass_g:
+          type: integer
+          description: The estimated mass in grams for this estimate.
+        order:
+          $ref: '#/components/schemas/OrdersOrder'
+          description: An object returning the order associated with this estimate.
+      required:
+        - id
+        - production
+        - type
+        - mass_g
+    EstimatesCreateFlightEstimateRequest:
+      type: object
+      description: >-
+        You must supply either distance_m or both origin_airport and
+        destination_airport.
+      properties:
+        distance_m:
+          type: integer
+          description: >-
+            The flight travel distance in meters. Uses orign and destination
+            airports to compute distance
+        origin_airport:
+          type: string
+          description: The IATA code of the origin airport. Uses distance_m
+        destination_airport:
+          type: string
+          description: The IATA code of the destination airport. Uses distance_m
+        aircraft_code:
+          type: string
+          description: >-
+            The IATA code of the aircraft. Defaults to EPA average emission
+            factor
+        cabin_class:
+          $ref: '#/components/schemas/EstimatesCabinClass'
+          description: Defaults to economy
+        passenger_count:
+          type: integer
+          description: The number of passengers in your party. Defaults to 1.
+        project_id:
+          type: string
+          description: >-
+            Only selects offsets from the specified project. Selects offsets
+            from any project
+        create_order:
+          type: boolean
+          description: >-
+            If true, creates a draft order. If false or empty, creates only the
+            estimate
+    EstimatesCabinClass:
+      type: string
+      enum:
+        - economy
+        - business
+        - first
+    OrdersOrderId:
+      type: string
+      format: uuid
+    OrdersItemId:
+      type: string
+    OrdersProjectId:
+      type: string
+    OrdersOrder:
+      type: object
+      properties:
+        id:
+          $ref: '#/components/schemas/OrdersOrderId'
+          description: >-
+            A unique uid for the record. UIDs will be prepended by ord_prod or
+            ord_test depending on the mode it was created in.
+        created_at:
+          type: string
+          description: The timestamp at which the order was created
+        production:
+          type: boolean
+          description: >-
+            A boolean indicating if this order is a production or demo mode
+            order.
+        state:
+          type: string
+          description: The current state of the order.
+        amount:
+          type: integer
+          description: >-
+            The amount in units purchased through this order. Minimum value: 0.
+            Maximum value: 100,000,000,000.
+        unit:
+          type: string
+          description: The unit of measurement (ie "g" or "Wh") for the amount ordered.
+        price:
+          type: integer
+          description: >-
+            The total price for the amount ordered. Prices are always
+            represented in the smallest currency unit (ie cents for USD).
+        patch_fee:
+          type: integer
+          description: integer
+        currency:
+          type: string
+          description: The currency code for the price and patch_fee.
+        registry_url:
+          type: string
+          description: The url of this order in the public registry.
+        metadata:
+          type: string
+          description: An optional JSON object containing metadata for this order.
+        line_items:
+          type: array
+          items:
+            $ref: '#/components/schemas/OrdersLineItem'
+          description: >-
+            An array containing the line items allocated for this order. Line
+            items are grouped by project, vintage year, and price.
+        issued_to:
+          $ref: '#/components/schemas/OrdersIssuedTo'
+          description: >-
+            An object containing the name & email of the party the inventory
+            will be issued to.
+      required:
+        - id
+        - created_at
+        - production
+        - state
+        - amount
+        - unit
+        - price
+        - patch_fee
+        - line_items
+    OrdersLineItem:
+      type: object
+      description: >-
+        line_items represent how your order was split across different projects
+        and vintage_years, and how much was spent for each.
+      properties:
+        id:
+          $ref: '#/components/schemas/OrdersItemId'
+          description: The identifier for this order line item
+        project:
+          $ref: '#/components/schemas/OrdersProject'
+          description: >-
+            An object containing information about the project associated with
+            the inventory allocated.
+        vintage_year:
+          type: integer
+          description: >-
+            The year in which the climate impacts of the project occurred, or
+            will occur.
+        amount:
+          type: integer
+          description: The amount ordered for the given project and vintage year.
+        unit:
+          type: string
+          description: >-
+            The unit of measurement (ie "g" or "Wh") for the amount ordered for
+            the given project and vintage year.
+        price:
+          type: integer
+          description: >-
+            The price for the given amount ordered for the given project and
+            vintage year. Does not include any Patch fee. Prices are always
+            represented in the smallest currency unit (ie cents for USD).
+        currency:
+          type: string
+          description: The currency code for the price.
+      required:
+        - id
+        - project
+        - vintage_year
+        - amount
+        - unit
+        - price
+        - currency
+    OrdersIssuedTo:
+      type: object
+      description: >-
+        The optional issued_to object lets you specify who the order is for.
+        This information is what will appear on the certificate.
+      properties:
+        name:
+          type: string
+          description: The name of the issuee
+        email:
+          type: string
+          description: The email address of the issuee
+      required:
+        - name
+        - email
+    OrdersProject:
+      type: object
+      properties:
+        id:
+          $ref: '#/components/schemas/OrdersProjectId'
+          description: >-
+            The unique uid for a project. UIDs will be prepended by pro_prod or
+            pro_test depending on the mode it was created in.
+        name:
+          type: string
+          description: The name of the project.
+      required:
+        - id
+        - name
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+servers: []
